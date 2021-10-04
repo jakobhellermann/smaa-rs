@@ -38,6 +38,7 @@ fn main() {
         window.inner_size().height,
         swapchain_format,
         SmaaMode::Smaa1X,
+        ShaderQuality::Low,
     );
 
     // Prepare scene

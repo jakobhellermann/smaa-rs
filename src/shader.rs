@@ -1,9 +1,21 @@
 #[derive(Debug, Clone, Copy)]
-#[allow(dead_code)]
+/// Controls the shader quality
 pub enum ShaderQuality {
+    /// 60% of the quality
+    ///
+    /// Threshold: 0.15<br>Max search steps: 4<br>No Diag Detection<br>No Corner detection
     Low,
+    /// 80% of the quality
+    ///
+    /// Threshold: 0.1<br>Max search steps: 8<br>No Diag Detection<br>No Corner detection
     Medium,
+    /// 95% of the quality
+    ///
+    /// Threshold: 0.1<br>Max search steps: 16<br>Diag Detection search steps: 8<br>Corner detection: 25
     High,
+    /// 99% of the quality
+    ///
+    /// Threshold: 0.05<br>Max search steps: 32<br>Diag Detection search steps: 16<br>Corner detection: 25
     Ultra,
 }
 

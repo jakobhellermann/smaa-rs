@@ -55,7 +55,8 @@
 #![deny(missing_docs)]
 
 mod shader;
-use shader::{ShaderQuality, ShaderStage};
+pub use shader::ShaderQuality;
+use shader::ShaderStage;
 
 #[path = "../third_party/smaa/Textures/AreaTex.rs"]
 mod area_tex;
@@ -254,9 +255,8 @@ impl Pipelines {
         device: &wgpu::Device,
         format: wgpu::TextureFormat,
         layouts: &BindGroupLayouts,
+        quality: ShaderQuality,
     ) -> Self {
-        let quality = ShaderQuality::High;
-
         let edge_detect_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("smaa.pipeline_layout.edge_detect"),
             bind_group_layouts: &[&layouts.edge_detect_bind_group_layout],
@@ -642,13 +642,14 @@ impl SmaaTarget {
         height: u32,
         format: wgpu::TextureFormat,
         mode: SmaaMode,
+        quality: ShaderQuality,
     ) -> Self {
         if let SmaaMode::Disabled = mode {
             return SmaaTarget { inner: None };
         }
 
         let layouts = BindGroupLayouts::new(device);
-        let pipelines = Pipelines::new(device, format, &layouts);
+        let pipelines = Pipelines::new(device, format, &layouts, quality);
         let resources = Resources::new(device, queue);
         let targets = Targets::new(device, width, height, format);
         let bind_groups = BindGroups::new(device, &layouts, &resources, &targets);
