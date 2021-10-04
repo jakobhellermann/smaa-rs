@@ -55,7 +55,7 @@
 #![deny(missing_docs)]
 
 mod shader;
-use shader::{ShaderQuality, ShaderSource, ShaderStage};
+use shader::{ShaderQuality, ShaderStage};
 
 #[path = "../third_party/smaa/Textures/AreaTex.rs"]
 mod area_tex;
@@ -255,9 +255,7 @@ impl Pipelines {
         format: wgpu::TextureFormat,
         layouts: &BindGroupLayouts,
     ) -> Self {
-        let source = ShaderSource {
-            quality: ShaderQuality::High,
-        };
+        let quality = ShaderQuality::High;
 
         let edge_detect_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("smaa.pipeline_layout.edge_detect"),
@@ -265,19 +263,21 @@ impl Pipelines {
             push_constant_ranges: &[],
         });
         let edge_detect_shader_vert = wgpu::VertexState {
-            module: &source.get_shader(
-                device,
+            module: &shader::get_shader(
                 ShaderStage::EdgeDetectionVS,
+                quality,
                 "smaa.shader.edge_detect.vert",
+                device,
             ),
             entry_point: "main",
             buffers: &[],
         };
         let edge_detect_shader_frag = wgpu::FragmentState {
-            module: &source.get_shader(
-                device,
+            module: &shader::get_shader(
                 ShaderStage::LumaEdgeDetectionPS,
+                quality,
                 "smaa.shader.edge_detect.frag",
+                device,
             ),
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
@@ -305,19 +305,21 @@ impl Pipelines {
             push_constant_ranges: &[],
         });
         let blend_weight_shader_vert = wgpu::VertexState {
-            module: &source.get_shader(
-                device,
+            module: &shader::get_shader(
                 ShaderStage::BlendingWeightVS,
+                quality,
                 "smaa.shader.blending_weight.vert",
+                device,
             ),
             entry_point: "main",
             buffers: &[],
         };
         let blend_weight_shader_frag = wgpu::FragmentState {
-            module: &source.get_shader(
-                device,
+            module: &shader::get_shader(
                 ShaderStage::BlendingWeightPS,
+                quality,
                 "smaa.shader.blending_weight.frag",
+                device,
             ),
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
@@ -346,19 +348,21 @@ impl Pipelines {
                 push_constant_ranges: &[],
             });
         let neighborhood_blending_vert = wgpu::VertexState {
-            module: &source.get_shader(
-                device,
+            module: &shader::get_shader(
                 ShaderStage::NeighborhoodBlendingVS,
+                quality,
                 "smaa.shader.neighborhood_blending.vert",
+                device,
             ),
             entry_point: "main",
             buffers: &[],
         };
         let neighborhood_blending_frag = wgpu::FragmentState {
-            module: &source.get_shader(
-                device,
+            module: &shader::get_shader(
                 ShaderStage::NeighborhoodBlendingPS,
+                quality,
                 "smaa.shader.neighborhood_blending.frag",
+                device,
             ),
             entry_point: "main",
             targets: &[wgpu::ColorTargetState {
