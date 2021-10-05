@@ -95,6 +95,9 @@ struct Resources {
 }
 struct Targets {
     rt_uniforms: wgpu::Buffer,
+    #[cfg(feature = "bevy")]
+    color_target: bevy_render2::render_resource::TextureView,
+    #[cfg(not(feature = "bevy"))]
     color_target: wgpu::TextureView,
     edges_target: wgpu::TextureView,
     blend_target: wgpu::TextureView,
@@ -439,7 +442,8 @@ impl Targets {
                 .create_view(&wgpu::TextureViewDescriptor {
                     label: Some("smaa.color_target.view"),
                     ..Default::default()
-                }),
+                })
+                .into(),
             edges_target: device
                 .create_texture(&wgpu::TextureDescriptor {
                     format: wgpu::TextureFormat::Rg8Unorm,
@@ -698,6 +702,18 @@ pub struct SmaaFrame<'a> {
     queue: &'a wgpu::Queue,
     output_view: &'a wgpu::TextureView,
 }
+
+impl SmaaFrame<'_> {
+    #[cfg(feature = "bevy")]
+    /// Returns the color target texture view, or `None` if SMAA is disabled
+    pub fn bevy_color_target(&self) -> Option<&bevy_render2::render_resource::TextureView> {
+        self.target
+            .inner
+            .as_ref()
+            .map(|inner| &inner.targets.color_target)
+    }
+}
+
 impl<'a> std::ops::Deref for SmaaFrame<'a> {
     type Target = wgpu::TextureView;
     fn deref(&self) -> &Self::Target {

@@ -9,8 +9,12 @@ categories = ["rendering", "game-engines"]
 license = "MIT"
 edition = "2018"
 
+[features]
+bevy = ["bevy_render2"]
+
 [dependencies]
 wgpu = "0.9.0"
+bevy_render2 = { git = "https://github.com/bevyengine/bevy", branch = "pipelined-rendering", optional = true }
 
 [dev-dependencies]
 winit = "0.24.0"
