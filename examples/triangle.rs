@@ -10,20 +10,26 @@ fn main() {
     // Initialize wgpu
     let event_loop: EventLoop<()> = EventLoop::new();
     let window = winit::window::Window::new(&event_loop).unwrap();
-    let instance = wgpu::Instance::new(wgpu::BackendBit::PRIMARY);
+    let instance = wgpu::Instance::new(wgpu::Backends::PRIMARY);
     let surface = unsafe { instance.create_surface(&window) };
     let adapter =
         futures::executor::block_on(instance.request_adapter(&Default::default())).unwrap();
-    let (device, queue) =
-        futures::executor::block_on(adapter.request_device(&Default::default(), None)).unwrap();
-    let swapchain_format = adapter
-        .get_swap_chain_preferred_format(&surface)
+    let (device, queue) = futures::executor::block_on(adapter.request_device(
+        &wgpu::DeviceDescriptor {
+            features: wgpu::Features::SPIRV_SHADER_PASSTHROUGH,
+            ..Default::default()
+        },
+        None,
+    ))
+    .unwrap();
+    let surface_format = surface
+        .get_preferred_format(&adapter)
         .unwrap_or(wgpu::TextureFormat::Bgra8UnormSrgb);
-    let mut swap_chain = device.create_swap_chain(
-        &surface,
-        &wgpu::SwapChainDescriptor {
-            usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
-            format: swapchain_format,
+    surface.configure(
+        &device,
+        &wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: surface_format,
             width: window.inner_size().width,
             height: window.inner_size().height,
             present_mode: wgpu::PresentMode::Mailbox,
@@ -36,7 +42,7 @@ fn main() {
         &queue,
         window.inner_size().width,
         window.inner_size().height,
-        swapchain_format,
+        surface_format,
         SmaaMode::Smaa1X,
     );
 
@@ -44,7 +50,6 @@ fn main() {
     let shader = device.create_shader_module(&wgpu::ShaderModuleDescriptor {
         label: None,
         source: wgpu::ShaderSource::Wgsl(Cow::Borrowed(include_str!("shader.wgsl"))),
-        flags: wgpu::ShaderFlags::all(),
     });
     let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         label: None,
@@ -62,7 +67,7 @@ fn main() {
         fragment: Some(wgpu::FragmentState {
             module: &shader,
             entry_point: "fs_main",
-            targets: &[swapchain_format.into()],
+            targets: &[surface_format.into()],
         }),
         primitive: wgpu::PrimitiveState::default(),
         depth_stencil: None,
@@ -78,11 +83,11 @@ fn main() {
                 ..
             } => {
                 // Recreate the swap chain with the new size
-                swap_chain = device.create_swap_chain(
-                    &surface,
-                    &wgpu::SwapChainDescriptor {
-                        usage: wgpu::TextureUsage::RENDER_ATTACHMENT,
-                        format: swapchain_format,
+                surface.configure(
+                    &device,
+                    &wgpu::SurfaceConfiguration {
+                        usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+                        format: surface_format,
                         width: size.width,
                         height: size.height,
                         present_mode: wgpu::PresentMode::Mailbox,
@@ -91,8 +96,11 @@ fn main() {
                 smaa_target.resize(&device, size.width, size.height);
             }
             Event::RedrawRequested(_) => {
-                let output_frame = swap_chain.get_current_frame().unwrap().output;
-                let frame = smaa_target.start_frame(&device, &queue, &output_frame.view);
+                let output_frame = surface.get_current_texture().unwrap();
+                let view = output_frame
+                    .texture
+                    .create_view(&wgpu::TextureViewDescriptor::default());
+                let frame = smaa_target.start_frame(&device, &queue, &view);
 
                 let mut encoder =
                     device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -113,6 +121,9 @@ fn main() {
                     rpass.draw(0..3, 0..1);
                 }
                 queue.submit(Some(encoder.finish()));
+
+                drop(frame);
+                output_frame.present();
             }
             Event::WindowEvent {
                 event: WindowEvent::CloseRequested,

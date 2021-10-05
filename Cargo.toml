@@ -8,10 +8,10 @@ keywords = ["graphics", "antialiasing", "SMAA"]
 categories = ["rendering", "game-engines"]
 license = "MIT"
 edition = "2018"
+resolver = "2"
 
 [dependencies]
-shaderc = "0.7.2"
-wgpu = "0.9.0"
+wgpu = "0.11"
 
 [dev-dependencies]
 winit = "0.24.0"
