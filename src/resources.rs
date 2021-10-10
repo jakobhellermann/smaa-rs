@@ -193,24 +193,20 @@ impl Pipelines {
             bind_group_layouts: &[&layouts.edge_detect_bind_group_layout],
             push_constant_ranges: &[],
         });
+        let edge_detection_shader = shader::get_shader(
+            ShaderStage::EdgeDetection,
+            quality,
+            "smaa.shader.edge_detect",
+            device,
+        );
         let edge_detect_shader_vert = wgpu::VertexState {
-            module: &shader::get_shader(
-                ShaderStage::EdgeDetectionVS,
-                quality,
-                "smaa.shader.edge_detect.vert",
-                device,
-            ),
-            entry_point: "main",
+            module: &edge_detection_shader,
+            entry_point: "vs_main",
             buffers: &[],
         };
         let edge_detect_shader_frag = wgpu::FragmentState {
-            module: &shader::get_shader(
-                ShaderStage::LumaEdgeDetectionPS,
-                quality,
-                "smaa.shader.edge_detect.frag",
-                device,
-            ),
-            entry_point: "main",
+            module: &edge_detection_shader,
+            entry_point: "fs_main",
             targets: &[wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rg8Unorm,
                 blend: Some(wgpu::BlendState {
@@ -235,24 +231,20 @@ impl Pipelines {
             bind_group_layouts: &[&layouts.blend_weight_bind_group_layout],
             push_constant_ranges: &[],
         });
+        let blending_weight_shader = &shader::get_shader(
+            ShaderStage::BlendingWeight,
+            quality,
+            "smaa.shader.blending_weight",
+            device,
+        );
         let blend_weight_shader_vert = wgpu::VertexState {
-            module: &shader::get_shader(
-                ShaderStage::BlendingWeightVS,
-                quality,
-                "smaa.shader.blending_weight.vert",
-                device,
-            ),
-            entry_point: "main",
+            module: blending_weight_shader,
+            entry_point: "vs_main",
             buffers: &[],
         };
         let blend_weight_shader_frag = wgpu::FragmentState {
-            module: &shader::get_shader(
-                ShaderStage::BlendingWeightPS,
-                quality,
-                "smaa.shader.blending_weight.frag",
-                device,
-            ),
-            entry_point: "main",
+            module: blending_weight_shader,
+            entry_point: "fs_main",
             targets: &[wgpu::ColorTargetState {
                 format: wgpu::TextureFormat::Rgba8Unorm,
                 blend: Some(wgpu::BlendState {
@@ -272,6 +264,12 @@ impl Pipelines {
             depth_stencil: None,
         });
 
+        let neighborhood_blending_shader = &shader::get_shader(
+            ShaderStage::NeighborhoodBlending,
+            quality,
+            "smaa.shader.neighborhood_blending",
+            device,
+        );
         let neighborhood_blending_layout =
             device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
                 label: Some("smaa.pipeline_layout.neighborhood_blending"),
@@ -279,23 +277,13 @@ impl Pipelines {
                 push_constant_ranges: &[],
             });
         let neighborhood_blending_vert = wgpu::VertexState {
-            module: &shader::get_shader(
-                ShaderStage::NeighborhoodBlendingVS,
-                quality,
-                "smaa.shader.neighborhood_blending.vert",
-                device,
-            ),
-            entry_point: "main",
+            module: neighborhood_blending_shader,
+            entry_point: "vs_main",
             buffers: &[],
         };
         let neighborhood_blending_frag = wgpu::FragmentState {
-            module: &shader::get_shader(
-                ShaderStage::NeighborhoodBlendingPS,
-                quality,
-                "smaa.shader.neighborhood_blending.frag",
-                device,
-            ),
-            entry_point: "main",
+            module: neighborhood_blending_shader,
+            entry_point: "fs_main",
             targets: &[wgpu::ColorTargetState {
                 format,
                 blend: Some(wgpu::BlendState {

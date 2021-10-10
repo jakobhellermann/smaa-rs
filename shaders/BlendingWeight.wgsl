@@ -3,20 +3,52 @@ struct UniformBlock {
     rt: vec4<f32>;
 };
 
-struct FragmentOutput {
-    [[location(0)]] OutColor: vec4<f32>;
+struct VertexOutput {
+    [[builtin(position)]] member: vec4<f32>;
+    [[location(0)]] pixcoord: vec2<f32>;
+    [[location(1)]] offset0: vec4<f32>;
+    [[location(2)]] offset1: vec4<f32>;
+    [[location(3)]] offset2: vec4<f32>;
+    [[location(4)]] texcoord: vec2<f32>;
 };
+
+[[group(0), binding(0)]]
+var linearSampler: sampler;
 
 [[group(0), binding(1)]]
 var<uniform> uniforms: UniformBlock;
-[[group(0), binding(0)]]
-var linearSampler: sampler;
+
+[[stage(vertex)]]
+fn vs_main([[builtin(vertex_index)]] gl_VertexIndex: u32) -> VertexOutput {
+    var gl_Position: vec4<f32>;
+    if (gl_VertexIndex == u32(0)) {
+        gl_Position = vec4<f32>(-1.0, -1.0, 1.0, 1.0);
+    }
+    if (gl_VertexIndex == u32(1)) {
+        gl_Position = vec4<f32>(-1.0, 3.0, 1.0, 1.0);
+    }
+    if (gl_VertexIndex == u32(2)) {
+        gl_Position = vec4<f32>(3.0, -1.0, 1.0, 1.0);
+    }
+    let texcoord = (gl_Position.xy * vec2<f32>(0.5, -(0.5))) + vec2<f32>(0.5);
+
+    let pixcoord = texcoord * uniforms.rt.zw;
+    let offset0 = (uniforms.rt.xyxy * vec4<f32>(-0.25, -0.125, 1.25, -0.125)) + texcoord.xyxy;
+    let offset1 = (uniforms.rt.xyxy * vec4<f32>(-0.125, -0.25, -0.125, 1.25)) + texcoord.xyxy;
+    let offset2 = ((uniforms.rt.xxyy * vec4<f32>(-2.0, 2.0, -2.0, 2.0)) * 32.0) + vec4<f32>(offset0.xz, offset1.yw);
+
+    return VertexOutput(gl_Position, pixcoord, offset0, offset1, offset2, texcoord);
+}
+
 [[group(0), binding(2)]]
 var edgesTex: texture_2d<f32>;
+
 [[group(0), binding(3)]]
 var areaTex: texture_2d<f32>;
+
 [[group(0), binding(4)]]
 var searchTex: texture_2d<f32>;
+
 var<private> offset0_1: vec4<f32>;
 var<private> offset1_1: vec4<f32>;
 var<private> offset2_1: vec4<f32>;
@@ -1187,13 +1219,12 @@ fn main1() {
 }
 
 [[stage(fragment)]]
-fn main([[location(1)]] offset0_: vec4<f32>, [[location(2)]] offset1_: vec4<f32>, [[location(3)]] offset2_: vec4<f32>, [[location(4)]] texcoord: vec2<f32>, [[location(0)]] pixcoord: vec2<f32>) -> FragmentOutput {
+fn fs_main([[location(1)]] offset0_: vec4<f32>, [[location(2)]] offset1_: vec4<f32>, [[location(3)]] offset2_: vec4<f32>, [[location(4)]] texcoord: vec2<f32>, [[location(0)]] pixcoord: vec2<f32>) -> [[location(0)]] vec4<f32> {
     offset0_1 = offset0_;
     offset1_1 = offset1_;
     offset2_1 = offset2_;
     texcoord1 = texcoord;
     pixcoord1 = pixcoord;
     main1();
-    let e34: vec4<f32> = OutColor;
-    return FragmentOutput(e34);
+    return OutColor;
 }

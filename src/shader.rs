@@ -9,14 +9,9 @@ pub enum ShaderQuality {
 
 #[derive(Copy, Clone)]
 pub enum ShaderStage {
-    EdgeDetectionVS,
-    LumaEdgeDetectionPS,
-
-    BlendingWeightVS,
-    BlendingWeightPS,
-
-    NeighborhoodBlendingVS,
-    NeighborhoodBlendingPS,
+    EdgeDetection,
+    BlendingWeight,
+    NeighborhoodBlending,
 }
 
 pub fn get_shader(
@@ -26,15 +21,10 @@ pub fn get_shader(
     device: &wgpu::Device,
 ) -> wgpu::ShaderModule {
     let source = match stage {
-        ShaderStage::EdgeDetectionVS => include_str!("../shaders/EdgeDetectionVS.wgsl"),
-        ShaderStage::LumaEdgeDetectionPS => include_str!("../shaders/LumaEdgeDetectionPS.wgsl"),
-        ShaderStage::BlendingWeightVS => include_str!("../shaders/BlendingWeightVS.wgsl"),
-        ShaderStage::BlendingWeightPS => include_str!("../shaders/BlendingWeightPS.wgsl"),
-        ShaderStage::NeighborhoodBlendingVS => {
-            include_str!("../shaders/NeighborhoodBlendingVS.wgsl")
-        }
-        ShaderStage::NeighborhoodBlendingPS => {
-            include_str!("../shaders/NeighborhoodBlendingPS.wgsl")
+        ShaderStage::EdgeDetection => include_str!("../shaders/EdgeDetection.wgsl"),
+        ShaderStage::BlendingWeight => include_str!("../shaders/BlendingWeight.wgsl"),
+        ShaderStage::NeighborhoodBlending => {
+            include_str!("../shaders/NeighborhoodBlending.wgsl")
         }
     };
 
