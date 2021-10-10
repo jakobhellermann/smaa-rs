@@ -36,14 +36,15 @@ fn main() {
         },
     );
 
+    let smaa = smaa::SmaaShaders::new(&device, &queue, surface_format);
+
     // Create SMAA target
     let mut smaa_target = SmaaTarget::new(
+        &smaa,
         &device,
-        &queue,
         window.inner_size().width,
         window.inner_size().height,
         surface_format,
-        SmaaMode::Smaa1X,
     );
 
     // Prepare scene
@@ -93,14 +94,16 @@ fn main() {
                         present_mode: wgpu::PresentMode::Mailbox,
                     },
                 );
-                smaa_target.resize(&device, size.width, size.height);
+                smaa_target =
+                    SmaaTarget::new(&smaa, &device, size.width, size.height, surface_format);
             }
             Event::RedrawRequested(_) => {
                 let output_frame = surface.get_current_texture().unwrap();
                 let view = output_frame
                     .texture
                     .create_view(&wgpu::TextureViewDescriptor::default());
-                let frame = smaa_target.start_frame(&device, &queue, &view);
+
+                let color_target = &smaa_target.color_target;
 
                 let mut encoder =
                     device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
@@ -108,7 +111,7 @@ fn main() {
                     let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                         label: None,
                         color_attachments: &[wgpu::RenderPassColorAttachment {
-                            view: &*frame,
+                            view: color_target,
                             resolve_target: None,
                             ops: wgpu::Operations {
                                 load: wgpu::LoadOp::Clear(wgpu::Color::GREEN),
@@ -120,9 +123,11 @@ fn main() {
                     rpass.set_pipeline(&render_pipeline);
                     rpass.draw(0..3, 0..1);
                 }
+
+                smaa_target.encode_commands(&smaa, &view, &mut encoder);
+
                 queue.submit(Some(encoder.finish()));
 
-                drop(frame);
                 output_frame.present();
             }
             Event::WindowEvent {
